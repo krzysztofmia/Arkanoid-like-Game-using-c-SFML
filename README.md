@@ -1,2 +1,2 @@
-Autor: Krzysztof Miałkowski
+Autor: Krzysztof Miałkowski </br>
 Tytuł: 
