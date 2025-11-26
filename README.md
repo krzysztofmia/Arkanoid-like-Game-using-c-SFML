@@ -1,0 +1,2 @@
+Autor: Krzysztof Miałkowski
+Tytuł: 
