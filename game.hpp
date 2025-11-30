@@ -60,6 +60,7 @@ void Brick::hit()
     if (hp <= 0)
     {
         isDestroyed = true;
+        this->setOutlineColor(sf::Color::Transparent);
     }  
 }
 
@@ -68,7 +69,6 @@ void Brick::changeColor()
     if (hp >= 0 && hp <=3)
     {
         this->setFillColor(colorLUT[hp]);
-        this->setOutlineColor(sf::Color::Transparent);
     }
 }
 
@@ -86,7 +86,7 @@ private:
 
     sf::SoundBuffer bounceBuffer;
     sf::SoundBuffer hitBuffer;
-    sf::Sound sound;
+    sf::Sound sound; //dzwieki odbicia
 
 public:
 	Ball(); //Konstruktor
@@ -106,7 +106,7 @@ public:
 
 Ball::Ball()
 {
-    // --- RANDOMIZER PRĘDKOŚCI ---
+    //randomizer predkosci w okreslonym zakresie
     std::srand(std::time(nullptr));
     float vx = 5.f + static_cast<float>(rand()) / RAND_MAX * 2.0f;
     float vy = 7.f + static_cast<float>(rand()) / RAND_MAX * 3.0f;
@@ -116,6 +116,7 @@ Ball::Ball()
     }
 	predkosc = { vx, -vy };
 
+    //pozostale parametry pilki
 	shape.setPosition({ 400.f, 500.f });
 	shape.setRadius(10.f);
 	shape.setFillColor(sf::Color::Red);
@@ -176,12 +177,12 @@ void Ball::draw(sf::RenderTarget& window)
 
 void Ball::ruch(float WindowWidth, float WindowHeight, float PaddleX, float PaddleY, float PaddleWidth, float PaddleHeight, std::vector<Brick>& bloki)
 {
+    //zmienne pomocnicze
     float x = getX();
     float y = getY();
     float r = getR();
     float vx = getVX();
     float vy = getVY();
-
 
     sf::Vector2f v({vx, vy});
 
@@ -208,6 +209,7 @@ void Ball::ruch(float WindowWidth, float WindowHeight, float PaddleX, float Padd
         sound.play();
         shape.move(v);
     } 
+    //PRZENIESIONE - Realizowane w klasie GAME
     // else
     // // Kolizja z dolną granicą okna - przegrana
     // if (y + r >= WindowHeight)
@@ -215,11 +217,11 @@ void Ball::ruch(float WindowWidth, float WindowHeight, float PaddleX, float Padd
     //     // std::cout << "GAME OVER" << std::endl;
     // }
 
-    // Kolizja z paletką
+    // Kolizja z paletka
     if (x + r >= PaddleX - PaddleWidth / 2 && x - r <= PaddleX + PaddleWidth / 2 && y + r >= PaddleY - PaddleHeight / 2 && y - r <= PaddleY + PaddleHeight / 2)
     {
-        shape.setPosition(x, PaddleY - PaddleHeight / 2 - r); //nad paletką
-        v.y = -std::abs(v.y); //zawsze odbicie w górę
+        shape.setPosition(x, PaddleY - PaddleHeight / 2 - r); //nad paletka
+        v.y = -std::abs(v.y); //zawsze odbicie w gore
         predkosc.y = v.y;
         sound.stop();
         sound.setBuffer(hitBuffer);
@@ -227,7 +229,7 @@ void Ball::ruch(float WindowWidth, float WindowHeight, float PaddleX, float Padd
         shape.move(v);
     }
 
-    // Kolizja z cegiełką
+    // Kolizja z cegielka
     for (Brick &brick : bloki)
     {
         if (brick.ifDestroyed()) continue;
@@ -242,13 +244,13 @@ void Ball::ruch(float WindowWidth, float WindowHeight, float PaddleX, float Padd
             float brickTop    = brickBounds.top;
             float brickBottom = brickBounds.top + brickBounds.height;
 
-            // obliczamy jak głęboko piłka weszła z każdej strony
+            // obliczamy jak gleboko pilka weszla z kazdej strony w celu wyznacazenia kierunku odbicia pilki
             float overlapLeft   = (x + r)  - brickLeft;
             float overlapRight  = brickRight - (x - r);
             float overlapTop    = (y + r) - brickTop;
             float overlapBottom = brickBottom - (y - r);
 
-            // wybór osi minimalnego wgłębienia
+            // wybor osi minimalnego wglebienia
             bool odbicieX = std::min(overlapLeft, overlapRight) < std::min(overlapTop, overlapBottom);
 
             if (odbicieX)
@@ -273,6 +275,7 @@ void Ball::ruch(float WindowWidth, float WindowHeight, float PaddleX, float Padd
 
 }
 
+//funkcja potrzebna do odczytu zapisu gry
 void Ball::setPosition(sf::Vector2f position, sf::Vector2f velocity)
 {
     shape.setPosition(position);
@@ -290,13 +293,13 @@ public:
 	Paddle(); //Konstruktor
 	void draw(sf::RenderTarget &window);
     void ruch(float WindowWidth);
+    void setPosition(sf::Vector2f position);
 	//--- GETTERY ---
 	int getWidth(){return shape.getSize().x;}
 	int getHeight(){return shape.getSize().y;}
 	int getX(){return shape.getPosition().x;}
 	int getY(){return shape.getPosition().y;}
     sf::Vector2f getPosition(){return shape.getPosition();}
-    void setPosition(sf::Vector2f position);
 };
 
 Paddle::Paddle()
@@ -324,6 +327,7 @@ void Paddle::draw(sf::RenderTarget& window)
 	window.draw(shape);
 }
 
+//funkcja potrzebna do odczytu zapisu gry
 void Paddle::setPosition(sf::Vector2f position)
 {
     shape.setPosition(position);
@@ -350,10 +354,10 @@ public:
     void apply(Paddle& p, Ball& b, std::vector<Brick>& blk);
 };
 
-// Konstruktor domyslny
+//konstruktor domyslny
 GameState::GameState() {}
 
-// Konstruktor przechowujacy stan
+//konstruktor przechowujacy stan
 GameState::GameState(Paddle& p, Ball& b, std::vector<Brick>& blk) :
     paddlePosition(p.getPosition()),
     ballPosition(b.getPosition()),
@@ -373,23 +377,23 @@ bool GameState::saveToFile(const std::string& filename)
 {
     std::ofstream file(filename);
     if (!file.is_open()) return false;
-    // Zapis Paletki
+    //zapis paletki
     file << paddlePosition.x << " " << paddlePosition.y << "\n";
 
-    // Zapis Piłki
+    //zapis pilki
     file << ballPosition.x << " " << ballPosition.y << " " 
         << ballVelocity.x << " " << ballVelocity.y << "\n";
 
-    // Zapis liczby bloków
+    //zapis liczby blokow
     int alive = 0;
     for (auto& block : blocks)
         if (block.hp > 0) alive++;
 
     file << alive << "\n";
-    // Zapis bloków
+    //zapis blokow
     for (const auto& block : blocks) 
     {
-        if (block.hp > 0)   // zapisuj TYLKO żywe
+        if (block.hp > 0)   //zapisuje tylko bloki ktore nie zostaly zniszczone - zapobieganie bledom odbijania sie pilki od duchow
                 file << block.x << " " << block.y << " " << block.hp << "\n";
     }
 
@@ -429,15 +433,15 @@ bool GameState::loadFromFile(const std::string& filename) {
 
 void GameState::apply(Paddle& p, Ball& b, std::vector<Brick>& blk)
 {
-    // 1. Przywróć paletkę
+    //przywroc paletke
     p.setPosition(paddlePosition);
 
-    // 2. Przywróć piłkę
+    //przywroc pilke
     b.setPosition(ballPosition, ballVelocity);
 
-    // 3. Przywróć bloki
+    //przywroc bloki
     blk.clear();
-    sf::Vector2f size((800 - (12 - 1)*2.f)/12, 20.f);
+    sf::Vector2f size((800 - (12 - 1)*2.f)/12, 20.f); //wielkosc blokow
 
     for (const auto& data : blocks)
     {
@@ -458,25 +462,29 @@ private:
     const int WindowHeight = 600;
     sf::Clock zegar;
     sf::Event event;
+
+    //elementy gry
     Paddle m_paletka;
     Ball m_pilka;
     std::vector<Brick> bloki;
+
     //tekst zapisywania
     sf::Font font;
     sf::Text saveMessage;
     sf::Text lostMessage;
     sf::Text wonMessage;
     bool showSaveMessage = false;
-    bool showWonMessage = false;
     bool showLostMessage = false;
-    float ls; //letter spacing dla zapisywania
-    sf::Clock saveClock;
+    bool showWonMessage = false;
+    float ls; //letter spacing - dla zapisywania
+    sf::Clock saveClock; //czas wyswietlania napisu
     bool gameRunning = true;
 
     void initBricks();
     void processEvents();
     void gameOver();
     void render();
+
 public:
 	Game();
 	void run();
@@ -491,7 +499,7 @@ Game::Game(): window(sf::VideoMode(800, 600), "Arkanoid v3.00"),
       m_pilka()
 {
     window.setFramerateLimit(60);
-    initBricks();     //inicjalizacja bloków
+    initBricks(); //inicjalizacja blokow
 
     font.loadFromFile("arial.ttf");
 
@@ -558,10 +566,11 @@ void Game::initBricks()
 
 void Game::render()
 {
-    //--- Rysowanie ---
-    window.clear(sf::Color::Black); // tło
+    //--- Rysowanie elementow gry---
+    window.clear(sf::Color::Black); // tlo
     m_pilka.draw(window);
     m_paletka.draw(window);
+    //--- Rysowanie wiadomosci ---
     if (showSaveMessage)
     {
         window.draw(saveMessage);
@@ -587,14 +596,14 @@ void Game::render()
 
 void Game::processEvents()
 {
-    if (!gameRunning)
+    if (!gameRunning) //blokada logiki programu po wygranej lub przegranej
         return;
     //Ruch paletki
     if (event.type == sf::Event::KeyPressed)
         m_paletka.ruch(WindowWidth);
     //Ruch pilki
     m_pilka.ruch(WindowWidth, WindowHeight, m_paletka.getX(), m_paletka.getY(), m_paletka.getWidth(), m_paletka.getHeight(), bloki);
-
+    //Stara wersja zapisu stanu gry
     // if (event.key.code == sf::Keyboard::P)
     // {
     //     GameState state(m_paletka, m_pilka, bloki);
@@ -603,16 +612,18 @@ void Game::processEvents()
     //         std::cout << "Gra zapisana!\n";
     //     }
     // }
+
+    //Zapis stanu gry
     if (event.key.code == sf::Keyboard::P)
     {
         GameState state(m_paletka, m_pilka, bloki);
         if (state.saveToFile("zapis.txt"))
         {
             showSaveMessage = true;
-            saveClock.restart();   // licz czas komunikatu
+            saveClock.restart();   //czas komunikatu
         }
     }
-    if (showSaveMessage && saveClock.getElapsedTime().asSeconds() > 2)
+    if (showSaveMessage && saveClock.getElapsedTime().asSeconds() > 2) //komunikat wyswietlany przez 2 sekundy
     {
         showSaveMessage = false;
         saveClock.restart();
@@ -660,12 +671,14 @@ void Game::run()
             {
                 if (event.type == sf::Event::Closed)
                     window.close();
+                //zamkniecie programu za pomoca ENTER
                 if (!gameRunning)
                 {
                     if (event.type == sf::Event::KeyPressed && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Enter))
                         window.close();
                 } 
             }
+            //wywolanine funkcji
             render();
             processEvents();
             gameOver();
@@ -803,6 +816,7 @@ int Menu::run()
                     }
                     else if (opcja == 1) // Wczytaj grę
                     {
+                        window.close();
                         return 1;   // zwracamy kod opcji
                     }
                     else if (opcja == 2) // Wyjście
