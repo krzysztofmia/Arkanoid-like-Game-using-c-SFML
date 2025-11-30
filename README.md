@@ -1,2 +1,2 @@
 Autor: Krzysztof Miałkowski </br>
-Tytuł: 
+Tytuł: Gra z mechanizmami przypominającymi grę zręcznościową Arkanoid. Projekt na zaliczenie
