@@ -457,7 +457,7 @@ void GameState::apply(Paddle& p, Ball& b, std::vector<Brick>& blk)
 class Game
 {
 private: 
-	sf::RenderWindow window;
+	sf::RenderWindow &window; //klasa game nie tworzy nowego okna - otwiera sie w juz powstalym
     const int WindowWidth = 800;
     const int WindowHeight = 600;
     sf::Clock zegar;
@@ -483,20 +483,21 @@ private:
     void initBricks();
     void processEvents();
     void gameOver();
-    void render();
+    void render(sf::RenderWindow &window);
 
 public:
-	Game();
-	void run();
+	Game(sf::RenderWindow &window);
+	void run(sf::RenderWindow &window);
     //---GETTERY---
     Paddle& getPaddle() { return m_paletka; }
     Ball& getBall() { return m_pilka; }
     std::vector<Brick>& getBricks() { return bloki; }
 };
 
-Game::Game(): window(sf::VideoMode(800, 600), "Arkanoid v3.00"),
-      m_paletka(),
-      m_pilka()
+Game::Game(sf::RenderWindow &win): //window(sf::VideoMode(800, 600), "Arkanoid v3.00"),
+    window(win),
+    m_paletka(),
+    m_pilka()
 {
     window.setFramerateLimit(60);
     initBricks(); //inicjalizacja blokow
@@ -564,7 +565,7 @@ void Game::initBricks()
     }
 }
 
-void Game::render()
+void Game::render(sf::RenderWindow &window)
 {
     //--- Rysowanie elementow gry---
     window.clear(sf::Color::Black); // tlo
@@ -661,7 +662,7 @@ void Game::gameOver()
     }
 }
 
-void Game::run()
+void Game::run(sf::RenderWindow &window)
 {
     while (window.isOpen())
     {
@@ -679,7 +680,7 @@ void Game::run()
                 } 
             }
             //wywolanine funkcji
-            render();
+            render(window);
             processEvents();
             gameOver();
             zegar.restart();
@@ -807,22 +808,29 @@ int Menu::run()
 
                     if (opcja == 0)      // Nowa gra
                     {
-                        window.close();  // zamykamy menu
+                        //window.close();  // zamykamy menu - od teraz game odpala sie w tym samym oknie co menu
                         
-                        Game gra;        // tworzymy obiekt gry
-                        gra.run();       // odpalamy grę
+                        Game gra(window);        // tworzymy obiekt gry
+                        gra.run(window);       // odpalamy grę
 
                         return 0;
                     }
                     else if (opcja == 1) // Wczytaj grę
                     {
-                        window.close();
+                        //window.close();
+                        Game gra(window);
+                        GameState state;
+                        if (state.loadFromFile("zapis.txt"))
+                        {
+                            state.apply(gra.getPaddle(), gra.getBall(), gra.getBricks());
+                        }
+                        gra.run(window);
                         return 1;   // zwracamy kod opcji
                     }
                     else if (opcja == 2) // Wyjście
                     {
                         window.close();
-                        return 0;
+                        return 2;
                     }
                 }
             }
